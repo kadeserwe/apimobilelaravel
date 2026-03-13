@@ -1,0 +1,51 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: laravel-api
+    volumes:
+      - .:/var/www     # Code source
+   #   - ./storage:/var/www/storage
+   #   - ./public/storage:/var/www/public/storage  c'est que j'ai commenté
+    env_file:
+      - .env
+    depends_on:
+      - laravel-api-mysql
+
+  nginx:
+    image: nginx:alpine
+    container_name: laravel-nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+
+  laravel-api-mysql:
+    image: mysql:8
+    container_name: laravel-api-mysql
+    environment:
+      MYSQL_DATABASE: db_mobile
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3308:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+
+  laravel-api-phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: laravel-api-phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: laravel-api-mysql
+      PMA_USER: root
+      PMA_PASSWORD: root
+    depends_on:
+      - laravel-api-mysql  
+
+volumes:
+  db-data:
